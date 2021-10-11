@@ -6,7 +6,7 @@ import http.server
 from pprint import pprint
 import time
 
-engine = create_engine('mysql+pymysql://root:******@127.0.0.1/magento2')
+engine = create_engine('mysql+pymysql://root:******@127.0.0.1/magento2', echo=True)
 engine.connect()
 Session = sessionmaker(bind=engine)
 db = Session()
