@@ -41,7 +41,7 @@ for product in products:
 db.add(admin)
 db.commit()
 
-
+# Test Simple Server 
 class Handler(http.server.SimpleHTTPRequestHandler):
         # A new Handler is created for every incommming request tho do_XYZ
         # methods correspond to different HTTP methods.
