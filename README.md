@@ -40,6 +40,48 @@ for product in products:
     print ("Product:", product.__dict__) 
     print ("Product Sku:", product.sku) 
 ```
+# Tables relations 
+
+## Many To One¶
+Many to one places a foreign key in the parent table referencing the child. relationship() is declared on the parent, where a new scalar-holding attribute will be created:
+```
+class Parent(Base):
+    __tablename__ = 'parent'
+    id = Column(Integer, primary_key=True)
+    child_id = Column(Integer, ForeignKey('child.id'))
+    child = relationship("Child")
+
+class Child(Base):
+    __tablename__ = 'child'
+    id = Column(Integer, primary_key=True)
+```
+Bidirectional behavior is achieved by adding a second relationship() and applying the relationship.back_populates parameter in both directions:
+
+```
+    __tablename__ = 'parent'
+    id = Column(Integer, primary_key=True)
+    child_id = Column(Integer, ForeignKey('child.id'))
+    child = relationship("Child", back_populates="parents")
+
+class Child(Base):
+    __tablename__ = 'child'
+    id = Column(Integer, primary_key=True)
+    parents = relationship("Parent", back_populates="child")
+```
+Alternatively, the relationship.backref parameter may be applied to a single relationship(), such as Parent.child:
+```
+class Parent(Base):
+    __tablename__ = 'parent'
+    id = Column(Integer, primary_key=True)
+    child_id = Column(Integer, ForeignKey('child.id'))
+    child = relationship("Child", backref="parents")
+```
 
 # Performace
 Acording the performace test PyGento returns 1-20 order data in 1ms when Magento requires 200+ ms
+
+# Debug 
+```
+engine = create_engine('mysql+pymysql://root:******@127.0.0.1/magento2', echo=True)
+```
+if True, the Engine will log all statements as well as a repr() of their parameter lists to the default log handler, which defaults to sys.stdout for output. If set to the string "debug", result rows will be printed to the standard output as well.
