@@ -6,7 +6,7 @@ import http.server
 from pprint import pprint
 import time
 
-engine = create_engine('mysql+pymysql://root:asdfDFhdjtDFGeq4rwrc3IOcvxb4xbfsdf@127.0.0.1/magento2')
+engine = create_engine('mysql+pymysql://root:******@127.0.0.1/magento2')
 engine.connect()
 Session = sessionmaker(bind=engine)
 db = Session()
@@ -38,14 +38,13 @@ for product in products:
     print ("Products:", product.__dict__) 
     print ("Product SKU:", product.sku) 
 
-#db.add(admin)
-#db.commit()
+db.add(admin)
+db.commit()
 
 
 class Handler(http.server.SimpleHTTPRequestHandler):
         # A new Handler is created for every incommming request tho do_XYZ
         # methods correspond to different HTTP methods.
-        
         
         def do_GET(self) :
                 #print(self)
@@ -68,11 +67,8 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 self.send_response(200)
                 self.send_header("Content-type", "text/html")
                 self.end_headers()
-                self.wfile.write(bytes("<html><head><title>Magento Data Provided by Python</title></head><body>" + body + "</body></html>","utf-8"))
-                #super(Handler, self).do_GET() #inherited do_GET serves dirs&files.
-                #self.wfile.close()
+                self.wfile.write(bytes("<html><head><title>Title goes here.</title></head><body>" + body + "</body></html>","utf-8"))
                 print("Execution Time %s seconds" % str(time.time() - start_time))
-                #self.wfile.close()
                 
 s = http.server.HTTPServer( ('', 8080), Handler )
 s.serve_forever()
