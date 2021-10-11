@@ -1,7 +1,7 @@
 # PyGento
 Python module to work with Magneto Database directly without using broken Magento 2 core
 
-<img src="https://github.com/Genaker/PyGento/blob/main/PyGento.PNG?raw=true" alt="PyGento" width="250"/>
+<img src="https://github.com/Genaker/PyGento/blob/main/PyGento.PNG?raw=true" alt="PyGento" width="600"/>
 
 PyGento is built on top of the SQL Alchemy
 
