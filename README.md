@@ -42,7 +42,7 @@ for product in products:
 ```
 # Tables relations 
 
-## Many To One¶
+## Many To One
 Many to one places a foreign key in the parent table referencing the child. relationship() is declared on the parent, where a new scalar-holding attribute will be created:
 ```
 class Parent(Base):
@@ -75,6 +75,15 @@ class Parent(Base):
     id = Column(Integer, primary_key=True)
     child_id = Column(Integer, ForeignKey('child.id'))
     child = relationship("Child", backref="parents")
+```
+
+## Selectin Relations Load
+The most useful loader in modern SQLAlchemy is the selectinload() loader option. This option solves the most common form of the “N plus one” problem which is that of a set of objects that refer to related collections. selectinload() will ensure that a particular collection for a full series of objects are loaded up front using a single query. It does this using a SELECT form that in most cases can be emitted against the related table alone, without the introduction of JOINs or subqueries, and only queries for those parent objects for which the collection isn’t already loaded. Below we illustrate selectinload() by loading all of the User objects and all of their related Address objects; while we invoke Session.execute() only once, given a select() construct, when the database is accessed, there are in fact two SELECT statements emitted, the second one being to fetch the related Address objects:
+
+```
+from sqlalchemy.orm import selectinload
+stmt = (
+  select(User).options(selectinload(User.addresses)).order_by(User.id)
 ```
 
 # Performace
