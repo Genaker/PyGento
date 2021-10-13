@@ -40,6 +40,9 @@ for product in products:
     print ("Product:", product.__dict__) 
     print ("Product Sku:", product.sku) 
 ```
+## Magento/Adobe Commerce edition PyGento(Pythone) Support 
+If you have any issues or requires Magento Enterprise (Adobe Commerce/MSI) Version package, please, create a ticket or drop me email at: yegorshytikov@gmail.com
+
 # Tables relations 
 
 ## Many To One
