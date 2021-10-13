@@ -118,3 +118,14 @@ Array Generate and Json Execution Time 0.008681297302246094 seconds
 engine = create_engine('mysql+pymysql://root:******@127.0.0.1/magento2', echo=True)
 ```
 if True, the Engine will log all statements as well as a repr() of their parameter lists to the default log handler, which defaults to sys.stdout for output. If set to the string "debug", result rows will be printed to the standard output as well.
+
+# "Introduction to SQLAlchemy 2020 (Tutorial)" by: Mike Bayer
+
+https://www.youtube.com/watch?v=sO7FFPNvX2s
+
+In this tutorial, we present a "from the ground up" tour of SQLAlchemy, what
+the general idea of it is, how it's organized, and what it looks like to use
+it.   This is the latest version of the "classic" SQLAlchemy tutorial  which
+has been presented on many occasions since 2008, reworked for the current
+recommended SQLAlchemy usage patterns with an emphasis on previewing the upcoming 1.4 and 2.0 releases of SQLAlchemy, which are poised to make major changes to many of SQLAlchemy's central paradigms and capabilities.
+SQLAlchemy is presented in terms of a four-layered model, which include "Engine and Connection Basics", "Table Metadata", "SQL Expression Language", and "ORM Usage" which is broken into two sections and API use is presented in terms of a console runner application which participants can install locally and follow along.  The tutorial will also present some of the newest in-development features of SQLAlchemy 1.4 which have only just merged.
