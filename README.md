@@ -89,6 +89,25 @@ stmt = (
   select(User).options(selectinload(User.addresses)).order_by(User.id)
 ```
 
+# Async engine 
+Initialize the new SQLAlchemy engine with create_async_engine() and create an async session maker by passing it the new AsyncSession class:
+```
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.ext.asyncio import create_async_engine
+from sqlalchemy.orm import sessionmaker
+
+
+DATABASE_URL = "postgresql+asyncpg://postgres:postgres@localhost/asyncalchemy"
+
+
+engine = create_async_engine(DATABASE_URL, echo=True)
+Base = declarative_base()
+async_session = sessionmaker(
+    engine, class_=AsyncSession, expire_on_commit=False
+)
+```
+
 # Performace
 Acording the performace test PyGento returns 1-20 order data in 1ms when Magento requires 200+ ms
 
