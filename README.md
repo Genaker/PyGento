@@ -125,6 +125,15 @@ Transpond Execution Time 0.0005435943603515625 seconds
 Json Execution Time 0.0006403923034667969 seconds
 Request Execution Time 0.016859769821166992 seconds
 ```
+for 1000 products reult is: 
+```
+Selects Execution Time 0.8228793144226074 seconds
+Transpond Execution Time 0.049771785736083984 seconds
+Json Execution Time 0.051209449768066406 seconds
+Request Execution Time 0.9310669898986816 seconds
+```
+
+In the feture this results can be improved using Async SQL requests and proper NoSQL product indexer...
 
 # Debug 
 ```
