@@ -112,6 +112,11 @@ async_session = sessionmaker(
 Acording the performace test PyGento returns 1-20 order data in 1ms when Magento requires 200+ ms
 Return 100 product with all data: Execution Time 0.07084512710571289 seconds in the debug mode and 0.05914497375488281 seconds in production mode
 Array Generate and Json Execution Time 0.008681297302246094 seconds
+```
+Selects Execution Time 0.05797290802001953 seconds
+transpond Execution Time 0.003899812698364258 seconds
+Json Execution Time 0.004744052886962891 seconds
+```
 
 # Debug 
 ```
