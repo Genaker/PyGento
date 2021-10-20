@@ -113,9 +113,17 @@ Acording the performace test PyGento returns 1-20 order data in 1ms when Magento
 Return 100 product with all data: Execution Time 0.07084512710571289 seconds in the debug mode and 0.05914497375488281 seconds in production mode
 Array Generate and Json Execution Time 0.008681297302246094 seconds
 ```
-Selects Execution Time 0.05797290802001953 seconds
-Transpond Execution Time 0.003899812698364258 seconds
-Json Execution Time 0.004744052886962891 seconds
+Selects Execution Time 0.05763673782348633 seconds
+Transpond Execution Time 0.0041141510009765625 seconds
+Json Execution Time 0.004602909088134766 seconds
+Request Execution Time 0.0689239501953125 seconds
+```
+for 10 product this results is:
+```
+Selects Execution Time 0.013299703598022461 seconds
+Transpond Execution Time 0.0005435943603515625 seconds
+Json Execution Time 0.0006403923034667969 seconds
+Request Execution Time 0.016859769821166992 seconds
 ```
 
 # Debug 
