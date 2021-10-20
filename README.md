@@ -114,7 +114,7 @@ Return 100 product with all data: Execution Time 0.07084512710571289 seconds in 
 Array Generate and Json Execution Time 0.008681297302246094 seconds
 ```
 Selects Execution Time 0.05797290802001953 seconds
-transpond Execution Time 0.003899812698364258 seconds
+Transpond Execution Time 0.003899812698364258 seconds
 Json Execution Time 0.004744052886962891 seconds
 ```
 
