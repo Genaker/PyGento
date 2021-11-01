@@ -1,7 +1,7 @@
 # coding: utf-8
 from sqlalchemy import Column, DECIMAL, Date, DateTime, Float, ForeignKey, Index, String, TIMESTAMP, Table, Text, text
 from sqlalchemy.dialects.mysql import BIGINT, INTEGER, MEDIUMTEXT, SMALLINT
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship, backref
 from sqlalchemy.ext.declarative import declarative_base
 
 Base = declarative_base()
@@ -95,13 +95,19 @@ class CatalogProductEntity(Base):
     created_at = Column(TIMESTAMP, nullable=False, server_default=text("current_timestamp()"), comment='Creation Time')
     updated_at = Column(TIMESTAMP, nullable=False, server_default=text("current_timestamp() ON UPDATE current_timestamp()"), comment='Update Time')
 
-    values = relationship('CatalogProductEntityMediaGallery', secondary='catalog_product_entity_media_gallery_value_to_entity')
+    gallery = relationship('CatalogProductEntityMediaGallery', secondary='catalog_product_entity_media_gallery_value_to_entity')
     parents = relationship(
         'CatalogProductEntity',
         secondary='catalog_product_relation',
         primaryjoin='CatalogProductEntity.entity_id == catalog_product_relation.c.child_id',
         secondaryjoin='CatalogProductEntity.entity_id == catalog_product_relation.c.parent_id'
     )
+    varchar = relationship("CatalogProductEntityVarchar", back_populates="entity")
+    decimal = relationship("CatalogProductEntityDecimal", back_populates="entity")
+    datetime = relationship("CatalogProductEntityDatetime", back_populates="entity")
+    text = relationship("CatalogProductEntityText", back_populates="entity")
+    intager = relationship("CatalogProductEntityInt", back_populates="entity")
+    
     websites = relationship('StoreWebsite', secondary='catalog_product_website')
 
 
@@ -1313,7 +1319,7 @@ class CatalogProductEntityDatetime(Base):
     value = Column(DateTime, comment='Value')
 
     attribute = relationship('EavAttribute')
-    entity = relationship('CatalogProductEntity')
+    entity = relationship('CatalogProductEntity', back_populates="datetime")
     store = relationship('Store')
 
 
@@ -1331,7 +1337,7 @@ class CatalogProductEntityDecimal(Base):
     value = Column(DECIMAL(20, 6), comment='Value')
 
     attribute = relationship('EavAttribute')
-    entity = relationship('CatalogProductEntity')
+    entity = relationship('CatalogProductEntity', back_populates="decimal")
     store = relationship('Store')
 
 
@@ -1368,7 +1374,7 @@ class CatalogProductEntityInt(Base):
     value = Column(INTEGER(11), comment='Value')
 
     attribute = relationship('EavAttribute')
-    entity = relationship('CatalogProductEntity')
+    entity = relationship('CatalogProductEntity', back_populates="intager")
     store = relationship('Store')
 
 
@@ -1429,7 +1435,7 @@ class CatalogProductEntityText(Base):
     value = Column(Text, comment='Value')
 
     attribute = relationship('EavAttribute')
-    entity = relationship('CatalogProductEntity')
+    entity = relationship('CatalogProductEntity', back_populates="text")
     store = relationship('Store')
 
 
@@ -1447,7 +1453,7 @@ class CatalogProductEntityVarchar(Base):
     value = Column(String(255), comment='Value')
 
     attribute = relationship('EavAttribute')
-    entity = relationship('CatalogProductEntity')
+    entity = relationship('CatalogProductEntity', back_populates="varchar")
     store = relationship('Store')
 
 
