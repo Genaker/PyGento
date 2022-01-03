@@ -7,11 +7,11 @@ PyGento is built on top of the SQL Alchemy
 
 SQLAlchemy is a library that facilitates the communication between Python programs and Magento databases. This library  acts as an Object Relational Mapper (ORM) tool that translates Python classes to Magento tables and automatically converts function calls to SQL statements. 
 
-SQLAlchemy allow developers to create and ship enterprise-grade, production-ready Magento 2 applications easily and lets developers focus on business logic.
+SQLAlchemy allows developers to create and ship enterprise-grade, production-ready Magento 2 applications easily and lets developers focus on business logic.
 
 SQLAlchemy is the Python SQL toolkit and Object Relational Mapper that gives application developers the full power and flexibility of SQL.
 
-It provides a full suite of well known enterprise-level persistence patterns, designed for efficient and high-performing database access, adapted into a simple and Pythonic domain language.
+It provides a full suite of well-known enterprise-level persistence patterns, designed for efficient and high-performing database access, adapted into a simple and Pythonic domain language.
 
 # Models Structure 
 
