@@ -15,7 +15,7 @@ It provides a full suite of well-known enterprise-level persistence patterns, de
 
 # Models Structure 
 
-Python abstaraction over magento database has multiple Models per file vs Magento one file per Class 
+Python abstraction over magento database has multiple Models per file vs Magento one file per Class 
 
 Python is not exclusively class-based - the natural unit of code decomposition in Python is the module. Modules are just as likely to contain functions (which are first-class objects in Python) as classes. In PHP Magento, the unit of decomposition is the class. PyGento hes several models per file. each model represent DB table. One PyGento model file contains all the classes for e-Commerce function (Catalog, Sales, Customer, Quote, Inventory).
 
@@ -27,6 +27,12 @@ Python is much more expressive than Magento, and if you restrict yourself to one
 from sqlalchemy import create_engine
 engine = create_engine('mysql+pymysql://root:******@127.0.0.1/magento2')
 engine.connect()
+```
+
+To make it simple, we configure it to JSON and use it, and read config.json or YML from the original config
+
+```
+php -r '$x = include("app/etc/env.php"); echo json_encode($x);' > config.json
 ```
 
 # Load Magento Model 
@@ -109,44 +115,44 @@ async_session = sessionmaker(
 ```
 
 # Performace
-Acording the performace test PyGento returns 1-20 order data in 1ms when Magento requires 200+ ms
-Return 100 product with all data: Execution Time 0.07084512710571289 seconds in the debug mode and 0.05914497375488281 seconds in production mode
+According to the performace test, PyGento returns 1-20 order data in 1ms when Magento requires 200+ ms
+Return 100 products with all data: Execution Time 0.07084512710571289 seconds in the debug mode and 0.05914497375488281 seconds in production mode
 Array Generate and Json Execution Time 0.008681297302246094 seconds
 ```
-Selects Execution Time 0.05763673782348633 seconds
-Transpond Execution Time 0.0041141510009765625 seconds
+Select Execution Time 0.05763673782348633 seconds
+Transponder Execution Time 0.0041141510009765625 seconds
 Json Execution Time 0.004602909088134766 seconds
 Request Execution Time 0.0689239501953125 seconds
 ```
 for 10 product this results is:
 ```
-Selects Execution Time 0.013299703598022461 seconds
-Transpond Execution Time 0.0005435943603515625 seconds
+Select Execution Time 0.013299703598022461 seconds
+Transponder Execution Time 0.0005435943603515625 seconds
 Json Execution Time 0.0006403923034667969 seconds
 Request Execution Time 0.016859769821166992 seconds
 ```
-for 1000 products reult is: 
+For 1000 products result is: 
 ```
-Selects Execution Time 0.8228793144226074 seconds
-Transpond Execution Time 0.049771785736083984 seconds
+Select Execution Time 0.8228793144226074 seconds
+Transponder Execution Time 0.049771785736083984 seconds
 Json Execution Time 0.051209449768066406 seconds
 Request Execution Time 0.9310669898986816 seconds
 ```
 
-In the feture this results can be improved using Async SQL requests and proper NoSQL product indexer...
+In the future, these results can be improved using Async SQL requests and proper NoSQL product indexer...
 
 # Debug 
 ```
 engine = create_engine('mysql+pymysql://root:******@127.0.0.1/magento2', echo=True)
 ```
-if True, the Engine will log all statements as well as a repr() of their parameter lists to the default log handler, which defaults to sys.stdout for output. If set to the string "debug", result rows will be printed to the standard output as well.
+If True, the Engine will log all statements and a repr() of their parameter lists to the default log handler, which defaults to sys.stdout for output. If set to the string "debug," result rows will also be printed to the standard output.
 
 # "Introduction to SQLAlchemy 2020 (Tutorial)" by: Mike Bayer
 
 https://www.youtube.com/watch?v=sO7FFPNvX2s
 
 In this tutorial, we present a "from the ground up" tour of SQLAlchemy, what
-the general idea of it is, how it's organized, and what it looks like to use
+the general idea of it is how it's organized and what it looks like to use
 it.   This is the latest version of the "classic" SQLAlchemy tutorial  which
 has been presented on many occasions since 2008, reworked for the current
 recommended SQLAlchemy usage patterns with an emphasis on previewing the upcoming 1.4 and 2.0 releases of SQLAlchemy, which are poised to make major changes to many of SQLAlchemy's central paradigms and capabilities.
