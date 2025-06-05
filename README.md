@@ -1,17 +1,148 @@
 # PyGento
-Python module to work with Magneto Database directly without using broken Magento 2 core
+
+## FastAPI HTTP API Usage
+
+PyGento provides a FastAPI-based HTTP API for product and attribute queries (see `test_fastapi.py`).
+
+### Installation: Fixing `bash: uvicorn: command not found`
+
+If you see this error when starting the server:
+
+```
+bash: uvicorn: command not found
+```
+
+You need to install `uvicorn`:
+
+```bash
+pip install uvicorn
+```
+
+Or, if you use Python 3:
+
+```bash
+pip3 install uvicorn
+```
+
+### Running the FastAPI Server (Development)
+
+Start the server with:
+
+```bash
+uvicorn test_fastapi:app --reload
+```
+
+- The `--reload` flag enables auto-reload on code changes (development only).
+- By default, the server runs on `http://127.0.0.1:8000`.
+
+### Accessing the API
+
+Visit:
+- [http://127.0.0.1:8000/products](http://127.0.0.1:8000/products) for product listing
+- [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs) for interactive Swagger UI
+
+#### Example Query:
+```
+curl 'http://127.0.0.1:8000/products?limit=1&with_attributes=true&store_id=0'
+```
+
+---
+
+## FastAPI Production Settings
+
+For production deployments:
+
+- **Never use `--reload` in production.**
+- Use a process manager (e.g., `systemd`, `supervisord`, or Docker).
+- Run with multiple workers for concurrency:
+
+```bash
+uvicorn test_fastapi:app --host 0.0.0.0 --port 8000 --workers 4
+```
+
+- Consider using a reverse proxy (e.g., Nginx) in front of Uvicorn for SSL, compression, and security.
+- Set environment variables for DB and app secrets securely.
+- Monitor logs and set up error reporting for production stability.
+
+See [FastAPI deployment docs](https://fastapi.tiangolo.com/deployment/) for more details.
+Python module to work with Magento Database directly without using the Magento 2 core
 
 <img src="https://github.com/Genaker/PyGento/blob/main/PyGento.PNG?raw=true" alt="PyGento" width="600"/>
 
-PyGento is built on top of the SQL Alchemy
+PyGento is built on top of SQLAlchemy, providing a clean, Pythonic interface to Magento's database.
 
-SQLAlchemy is a library that facilitates the communication between Python programs and Magento databases. This library  acts as an Object Relational Mapper (ORM) tool that translates Python classes to Magento tables and automatically converts function calls to SQL statements. 
+## Features
 
-SQLAlchemy allows developers to create and ship enterprise-grade, production-ready Magento 2 applications easily and lets developers focus on business logic.
+- **Unified Interface**: Works with both Magento Community and Enterprise editions
+- **Type Annotations**: Full type hints for better IDE support and code reliability
+- **Modern Python**: Built with Python 3.8+ and SQLAlchemy 1.4+
+- **Enterprise Support**: Handles the differences between Community and Enterprise editions transparently
 
-SQLAlchemy is the Python SQL toolkit and Object Relational Mapper that gives application developers the full power and flexibility of SQL.
+## Installation
 
-It provides a full suite of well-known enterprise-level persistence patterns, designed for efficient and high-performing database access, adapted into a simple and Pythonic domain language.
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/yourusername/PyGento.git
+   cd PyGento
+   ```
+
+2. Install dependencies:
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+3. Configure your database connection by creating a `.env` file:
+   ```ini
+   DB_HOST=localhost
+   DB_PORT=3306
+   DB_NAME=magento
+   DB_USER=magento
+   DB_PASSWORD=magento
+   DB_CHARSET=utf8mb4
+   ```
+
+## Quick Start
+
+```python
+from models import init_db, Session
+from utils.database import DatabaseConnection
+
+# Initialize database connection
+db_conn = DatabaseConnection()
+engine, Session = init_db(db_conn.get_connection_string())
+
+# Create a session
+session = Session()
+
+# Example query (once models are defined)
+# products = session.query(CatalogProductEntity).limit(10).all()
+# for product in products:
+#     print(product.sku)
+
+# Close the session
+session.close()
+```
+
+## Testing
+
+Run the test script to verify your setup:
+
+```bash
+python test_db.py
+```
+
+## Models
+
+PyGento organizes models by functionality, with each module containing related models:
+
+- `models/catalog.py`: Product and category models
+- `models/sales.py`: Order and invoice models
+- `models/customer.py`: Customer and address models
+- `models/checkout.py`: Cart and quote models
+
+## License
+
+MIT
 
 # Models Structure 
 

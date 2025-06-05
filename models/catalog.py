@@ -1,14 +1,27 @@
 # coding: utf-8
-from sqlalchemy import Column, DECIMAL, Date, DateTime, Float, ForeignKey, Index, String, TIMESTAMP, Table, Text, text
+import os
+import logging
+from sqlalchemy import Column, DECIMAL, Date, DateTime, Float, ForeignKey, Index, Integer, String, TIMESTAMP, Table, Text, text, and_
+
+logger = logging.getLogger(__name__)
 from sqlalchemy.dialects.mysql import BIGINT, INTEGER, MEDIUMTEXT, SMALLINT
 from sqlalchemy.orm import relationship, backref
-from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.ext.declarative import declarative_base, declared_attr
+from models.base import EntityIdMixin
 
 Base = declarative_base()
 metadata = Base.metadata
 
+catalog_product_entity_media_gallery_value_to_entity = Table(
+    'catalog_product_entity_media_gallery_value_to_entity', metadata,
+    Column('value_id', ForeignKey('catalog_product_entity_media_gallery.value_id', ondelete='CASCADE'), nullable=False, comment='Value media Entry ID'),
+    Column('row_id', ForeignKey('catalog_product_entity.entity_id', ondelete='CASCADE'), nullable=False, index=True, comment='Product Entity ID'),
+    Index('CAT_PRD_ENTT_MDA_GLR_VAL_TO_ENTT_VAL_ID_ROW_ID', 'value_id', 'row_id', unique=True),
+    comment='Link Media value to Product entity table'
+)
 
-class CatalogCategoryEntity(Base):
+
+class CatalogCategoryEntity(Base, EntityIdMixin):
     __tablename__ = 'catalog_category_entity'
     __table_args__ = {'comment': 'Catalog Category Table'}
 
@@ -82,7 +95,7 @@ class CatalogProductBundleStockIndex(Base):
     stock_status = Column(SMALLINT(6), server_default=text("0"), comment='Stock Status')
 
 
-class CatalogProductEntity(Base):
+class CatalogProductEntity(Base, EntityIdMixin):
     __tablename__ = 'catalog_product_entity'
     __table_args__ = {'comment': 'Catalog Product Table'}
 
@@ -102,11 +115,126 @@ class CatalogProductEntity(Base):
         primaryjoin='CatalogProductEntity.entity_id == catalog_product_relation.c.child_id',
         secondaryjoin='CatalogProductEntity.entity_id == catalog_product_relation.c.parent_id'
     )
-    varchar = relationship("CatalogProductEntityVarchar", back_populates="entity")
-    decimal = relationship("CatalogProductEntityDecimal", back_populates="entity")
-    datetime = relationship("CatalogProductEntityDatetime", back_populates="entity")
-    text = relationship("CatalogProductEntityText", back_populates="entity")
-    intager = relationship("CatalogProductEntityInt", back_populates="entity")
+    @classmethod
+    def _get_entity_id_column_name(cls):
+        """Helper method to get the correct entity_id column name"""
+        from utils.database import db_connection
+        return db_connection.get_entity_id_column()
+    
+    @declared_attr
+    def varchar(cls):
+        """Relationship to CatalogProductEntityVarchar"""
+        from utils.database import db_connection
+        is_enterprise = db_connection.is_enterprise_edition()
+        
+        if is_enterprise:
+            return relationship(
+                "CatalogProductEntityVarchar",
+                primaryjoin="CatalogProductEntityVarchar.row_id == CatalogProductEntity.entity_id",
+                foreign_keys="[CatalogProductEntityVarchar.row_id]",
+                back_populates='product',
+                lazy='dynamic'
+            )
+        else:
+            return relationship(
+                "CatalogProductEntityVarchar",
+                primaryjoin="CatalogProductEntityVarchar.entity_id == CatalogProductEntity.entity_id",
+                foreign_keys="[CatalogProductEntityVarchar.entity_id]",
+                back_populates='product',
+                lazy='dynamic'
+            )
+    
+    @declared_attr
+    def decimal(cls):
+        """Relationship to CatalogProductEntityDecimal"""
+        from utils.database import db_connection
+        is_enterprise = db_connection.is_enterprise_edition()
+        
+        if is_enterprise:
+            return relationship(
+                "CatalogProductEntityDecimal",
+                primaryjoin="CatalogProductEntityDecimal.row_id == CatalogProductEntity.entity_id",
+                foreign_keys="[CatalogProductEntityDecimal.row_id]",
+                lazy='dynamic'
+            )
+        else:
+            return relationship(
+                "CatalogProductEntityDecimal",
+                primaryjoin="CatalogProductEntityDecimal.entity_id == CatalogProductEntity.entity_id",
+                foreign_keys="[CatalogProductEntityDecimal.entity_id]",
+                lazy='dynamic'
+            )
+    
+    @declared_attr
+    def datetime(cls):
+        """Relationship to CatalogProductEntityDatetime"""
+        from utils.database import db_connection
+        is_enterprise = db_connection.is_enterprise_edition()
+        
+        if is_enterprise:
+            return relationship(
+                "CatalogProductEntityDatetime",
+                primaryjoin="CatalogProductEntityDatetime.row_id == CatalogProductEntity.entity_id",
+                foreign_keys="[CatalogProductEntityDatetime.row_id]",
+                lazy='dynamic'
+            )
+        else:
+            return relationship(
+                "CatalogProductEntityDatetime",
+                primaryjoin="CatalogProductEntityDatetime.entity_id == CatalogProductEntity.entity_id",
+                foreign_keys="[CatalogProductEntityDatetime.entity_id]",
+                lazy='dynamic'
+            )
+
+    # datetime_attributes relationship removed; use product on the attribute backend side only
+    
+    @declared_attr
+    def text(cls):
+        """Relationship to CatalogProductEntityText"""
+        from utils.database import db_connection
+        is_enterprise = db_connection.is_enterprise_edition()
+        
+        if is_enterprise:
+            return relationship(
+                "CatalogProductEntityText",
+                primaryjoin="CatalogProductEntityText.row_id == CatalogProductEntity.entity_id",
+                foreign_keys="[CatalogProductEntityText.row_id]",
+                back_populates='product',
+                lazy='dynamic'
+            )
+        else:
+            return relationship(
+                "CatalogProductEntityText",
+                primaryjoin="CatalogProductEntityText.row_id == CatalogProductEntity.entity_id",
+                foreign_keys="[CatalogProductEntityText.row_id]",
+                back_populates='product',
+                lazy='dynamic'
+            )
+    
+    @declared_attr
+    def intager(cls):
+        """Relationship to CatalogProductEntityInt"""
+        from utils.database import db_connection
+        is_enterprise = db_connection.is_enterprise_edition()
+        
+        if is_enterprise:
+            return relationship(
+                "CatalogProductEntityInt",
+                primaryjoin="CatalogProductEntityInt.row_id == CatalogProductEntity.entity_id",
+                foreign_keys="[CatalogProductEntityInt.row_id]",
+                viewonly=True,
+                lazy='dynamic',
+                back_populates='product'
+            )
+        else:
+            return relationship(
+                "CatalogProductEntityInt",
+                primaryjoin="CatalogProductEntityInt.row_id == CatalogProductEntity.entity_id",
+                foreign_keys="[CatalogProductEntityInt.row_id]",
+                viewonly=True,
+                lazy='dynamic',
+                back_populates='product'
+            )
     
     websites = relationship('StoreWebsite', secondary='catalog_product_website')
 
@@ -1255,39 +1383,46 @@ class CatalogCategoryEntityInt(Base):
     store = relationship('Store')
 
 
+_cat_entity_col = 'row_id' if os.environ.get('MAGENTO_EDITION', '').lower() == 'enterprise' else 'entity_id'
+_prd_entity_col = 'row_id' if os.environ.get('MAGENTO_EDITION', '').lower() == 'enterprise' else 'entity_id'
+
 class CatalogCategoryEntityText(Base):
     __tablename__ = 'catalog_category_entity_text'
     __table_args__ = (
-        Index('CATALOG_CATEGORY_ENTITY_TEXT_ENTITY_ID_ATTRIBUTE_ID_STORE_ID', 'entity_id', 'attribute_id', 'store_id', unique=True),
+        Index('CATALOG_CATEGORY_ENTITY_TEXT_ENTITY_ID_ATTRIBUTE_ID_STORE_ID', _cat_entity_col, 'attribute_id', 'store_id', unique=True),
         {'comment': 'Catalog Category Text Attribute Backend Table'}
     )
 
     value_id = Column(INTEGER(11), primary_key=True, comment='Value ID')
     attribute_id = Column(ForeignKey('eav_attribute.attribute_id', ondelete='CASCADE'), nullable=False, index=True, server_default=text("0"), comment='Attribute ID')
     store_id = Column(ForeignKey('store.store_id', ondelete='CASCADE'), nullable=False, index=True, server_default=text("0"), comment='Store ID')
-    entity_id = Column(ForeignKey('catalog_category_entity.entity_id', ondelete='CASCADE'), nullable=False, index=True, server_default=text("0"), comment='Entity ID')
+    # Dynamic entity_id/row_id logic
+    
+    locals()[_cat_entity_col] = Column(Integer, ForeignKey('catalog_category_entity.entity_id', ondelete='CASCADE'), nullable=False, index=True, server_default=text("0"), comment='Row ID' if _cat_entity_col == 'row_id' else 'Entity ID')
     value = Column(Text, comment='Value')
 
     attribute = relationship('EavAttribute')
-    entity = relationship('CatalogCategoryEntity')
+    entity = relationship('CatalogCategoryEntity', primaryjoin=f"CatalogCategoryEntityText.{_cat_entity_col} == CatalogCategoryEntity.entity_id")
     store = relationship('Store')
 
 
 class CatalogCategoryEntityVarchar(Base):
     __tablename__ = 'catalog_category_entity_varchar'
     __table_args__ = (
-        Index('CATALOG_CATEGORY_ENTITY_VARCHAR_ENTITY_ID_ATTRIBUTE_ID_STORE_ID', 'entity_id', 'attribute_id', 'store_id', unique=True),
+        Index('CATALOG_CATEGORY_ENTITY_VARCHAR_ENTITY_ID_ATTRIBUTE_ID_STORE_ID', _cat_entity_col, 'attribute_id', 'store_id', unique=True),
         {'comment': 'Catalog Category Varchar Attribute Backend Table'}
     )
 
     value_id = Column(INTEGER(11), primary_key=True, comment='Value ID')
     attribute_id = Column(ForeignKey('eav_attribute.attribute_id', ondelete='CASCADE'), nullable=False, index=True, server_default=text("0"), comment='Attribute ID')
     store_id = Column(ForeignKey('store.store_id', ondelete='CASCADE'), nullable=False, index=True, server_default=text("0"), comment='Store ID')
-    entity_id = Column(ForeignKey('catalog_category_entity.entity_id', ondelete='CASCADE'), nullable=False, index=True, server_default=text("0"), comment='Entity ID')
+    # Dynamic entity_id/row_id logic
+    
+    locals()[_cat_entity_col] = Column(Integer, ForeignKey('catalog_category_entity.entity_id', ondelete='CASCADE'), nullable=False, index=True, server_default=text("0"), comment='Row ID' if _cat_entity_col == 'row_id' else 'Entity ID')
     value = Column(String(255), comment='Value')
 
     attribute = relationship('EavAttribute')
-    entity = relationship('CatalogCategoryEntity')
+    entity = relationship('CatalogCategoryEntity', primaryjoin=f"CatalogCategoryEntityVarchar.{_cat_entity_col} == CatalogCategoryEntity.entity_id")
     store = relationship('Store')
 
 
@@ -1306,155 +1441,122 @@ class CatalogProductBundleSelectionPrice(Base):
 
 
 class CatalogProductEntityDatetime(Base):
+    """Catalog Product Datetime Attribute Backend Table"""
     __tablename__ = 'catalog_product_entity_datetime'
-    __table_args__ = (
-        Index('CATALOG_PRODUCT_ENTITY_DATETIME_ENTITY_ID_ATTRIBUTE_ID_STORE_ID', 'entity_id', 'attribute_id', 'store_id', unique=True),
-        {'comment': 'Catalog Product Datetime Attribute Backend Table'}
-    )
+    __table_args__ = {'comment': 'Catalog Product Datetime Attribute Backend Table'}
 
     value_id = Column(INTEGER(11), primary_key=True, comment='Value ID')
     attribute_id = Column(ForeignKey('eav_attribute.attribute_id', ondelete='CASCADE'), nullable=False, index=True, server_default=text("0"), comment='Attribute ID')
     store_id = Column(ForeignKey('store.store_id', ondelete='CASCADE'), nullable=False, index=True, server_default=text("0"), comment='Store ID')
-    entity_id = Column(ForeignKey('catalog_product_entity.entity_id', ondelete='CASCADE'), nullable=False, server_default=text("0"), comment='Entity ID')
     value = Column(DateTime, comment='Value')
-
+    
+    locals()[_prd_entity_col] = Column(Integer, ForeignKey('catalog_product_entity.entity_id', ondelete='CASCADE'), nullable=False, index=True, server_default=text("0"), comment='Row ID' if _prd_entity_col == 'row_id' else 'Entity ID')
     attribute = relationship('EavAttribute')
-    entity = relationship('CatalogProductEntity', back_populates="datetime")
     store = relationship('Store')
+    product = relationship('CatalogProductEntity', primaryjoin=f"CatalogProductEntityDatetime.{_prd_entity_col} == CatalogProductEntity.entity_id", overlaps="datetime")
 
 
 class CatalogProductEntityDecimal(Base):
+    """Catalog Product Decimal Attribute Backend Table"""
     __tablename__ = 'catalog_product_entity_decimal'
-    __table_args__ = (
-        Index('CATALOG_PRODUCT_ENTITY_DECIMAL_ENTITY_ID_ATTRIBUTE_ID_STORE_ID', 'entity_id', 'attribute_id', 'store_id', unique=True),
-        {'comment': 'Catalog Product Decimal Attribute Backend Table'}
-    )
+    __table_args__ = {'comment': 'Catalog Product Decimal Attribute Backend Table'}
 
     value_id = Column(INTEGER(11), primary_key=True, comment='Value ID')
     attribute_id = Column(ForeignKey('eav_attribute.attribute_id', ondelete='CASCADE'), nullable=False, index=True, server_default=text("0"), comment='Attribute ID')
     store_id = Column(ForeignKey('store.store_id', ondelete='CASCADE'), nullable=False, index=True, server_default=text("0"), comment='Store ID')
-    entity_id = Column(ForeignKey('catalog_product_entity.entity_id', ondelete='CASCADE'), nullable=False, server_default=text("0"), comment='Entity ID')
     value = Column(DECIMAL(20, 6), comment='Value')
-
+    
+    locals()[_prd_entity_col] = Column(Integer, ForeignKey('catalog_product_entity.entity_id', ondelete='CASCADE'), nullable=False, index=True, server_default=text("0"), comment='Row ID' if _prd_entity_col == 'row_id' else 'Entity ID')
     attribute = relationship('EavAttribute')
-    entity = relationship('CatalogProductEntity', back_populates="decimal")
     store = relationship('Store')
+    product = relationship('CatalogProductEntity', primaryjoin=f"CatalogProductEntityDecimal.{_prd_entity_col} == CatalogProductEntity.entity_id", overlaps="decimal")
 
 
 class CatalogProductEntityGallery(Base):
     __tablename__ = 'catalog_product_entity_gallery'
     __table_args__ = (
-        Index('CATALOG_PRODUCT_ENTITY_GALLERY_ENTITY_ID_ATTRIBUTE_ID_STORE_ID', 'entity_id', 'attribute_id', 'store_id', unique=True),
+        Index('CATALOG_PRODUCT_ENTITY_GALLERY_ROW_ID_ATTRIBUTE_ID_STORE_ID', 'row_id', 'attribute_id', 'store_id', unique=True),
         {'comment': 'Catalog Product Gallery Attribute Backend Table'}
     )
 
     value_id = Column(INTEGER(11), primary_key=True, comment='Value ID')
     attribute_id = Column(ForeignKey('eav_attribute.attribute_id', ondelete='CASCADE'), nullable=False, index=True, server_default=text("0"), comment='Attribute ID')
     store_id = Column(ForeignKey('store.store_id', ondelete='CASCADE'), nullable=False, index=True, server_default=text("0"), comment='Store ID')
-    entity_id = Column(ForeignKey('catalog_product_entity.entity_id', ondelete='CASCADE'), nullable=False, index=True, server_default=text("0"), comment='Entity ID')
+
+    locals()[_prd_entity_col] = Column(Integer, ForeignKey('catalog_product_entity.entity_id', ondelete='CASCADE'), nullable=False, index=True, server_default=text("0"), comment='Row ID' if _prd_entity_col == 'row_id' else 'Entity ID')
     position = Column(INTEGER(11), nullable=False, server_default=text("0"), comment='Position')
     value = Column(String(255), comment='Value')
 
     attribute = relationship('EavAttribute')
-    entity = relationship('CatalogProductEntity')
     store = relationship('Store')
+    product = relationship('CatalogProductEntity', primaryjoin=f"CatalogProductEntityGallery.{_prd_entity_col} == CatalogProductEntity.entity_id")
 
 
 class CatalogProductEntityInt(Base):
+    """Catalog Product Integer Attribute Backend Table"""
     __tablename__ = 'catalog_product_entity_int'
-    __table_args__ = (
-        Index('CATALOG_PRODUCT_ENTITY_INT_ENTITY_ID_ATTRIBUTE_ID_STORE_ID', 'entity_id', 'attribute_id', 'store_id', unique=True),
-        {'comment': 'Catalog Product Integer Attribute Backend Table'}
-    )
+    __table_args__ = {'comment': 'Catalog Product Integer Attribute Backend Table'}
 
     value_id = Column(INTEGER(11), primary_key=True, comment='Value ID')
     attribute_id = Column(ForeignKey('eav_attribute.attribute_id', ondelete='CASCADE'), nullable=False, index=True, server_default=text("0"), comment='Attribute ID')
     store_id = Column(ForeignKey('store.store_id', ondelete='CASCADE'), nullable=False, index=True, server_default=text("0"), comment='Store ID')
-    entity_id = Column(ForeignKey('catalog_product_entity.entity_id', ondelete='CASCADE'), nullable=False, server_default=text("0"), comment='Entity ID')
     value = Column(INTEGER(11), comment='Value')
-
+    
+    locals()[_prd_entity_col] = Column(Integer, ForeignKey('catalog_product_entity.entity_id', ondelete='CASCADE'), nullable=False, index=True, server_default=text("0"), comment='Row ID' if _prd_entity_col == 'row_id' else 'Entity ID')
     attribute = relationship('EavAttribute')
-    entity = relationship('CatalogProductEntity', back_populates="intager")
     store = relationship('Store')
+    product = relationship('CatalogProductEntity', primaryjoin=f"CatalogProductEntityInt.{_prd_entity_col} == CatalogProductEntity.entity_id")
 
 
 class CatalogProductEntityMediaGalleryValue(Base):
     __tablename__ = 'catalog_product_entity_media_gallery_value'
     __table_args__ = (
-        Index('CAT_PRD_ENTT_MDA_GLR_VAL_ENTT_ID_VAL_ID_STORE_ID', 'entity_id', 'value_id', 'store_id'),
+        Index('CAT_PRD_ENTT_MDA_GLR_VAL_ROW_ID_VAL_ID_STORE_ID', 'row_id', 'value_id', 'store_id'),
         {'comment': 'Catalog Product Media Gallery Attribute Value Table'}
     )
 
-    value_id = Column(ForeignKey('catalog_product_entity_media_gallery.value_id', ondelete='CASCADE'), nullable=False, index=True, server_default=text("0"), comment='Value ID')
+    value_id = Column(INTEGER(11), ForeignKey('catalog_product_entity_media_gallery.value_id', ondelete='CASCADE'), primary_key=True, comment='Value ID')
     store_id = Column(ForeignKey('store.store_id', ondelete='CASCADE'), nullable=False, index=True, server_default=text("0"), comment='Store ID')
-    entity_id = Column(ForeignKey('catalog_product_entity.entity_id', ondelete='CASCADE'), nullable=False, index=True, server_default=text("0"), comment='Entity ID')
+    
+    locals()[_prd_entity_col] = Column(Integer, ForeignKey('catalog_product_entity.entity_id', ondelete='CASCADE'), nullable=False, index=True, server_default=text("0"), comment='Row ID' if _prd_entity_col == 'row_id' else 'Entity ID')
     label = Column(String(255), comment='Label')
     position = Column(INTEGER(10), comment='Position')
     disabled = Column(SMALLINT(5), nullable=False, server_default=text("0"), comment='Is Disabled')
-    record_id = Column(INTEGER(10), primary_key=True, comment='Record ID')
-
-    entity = relationship('CatalogProductEntity')
     store = relationship('Store')
-    value = relationship('CatalogProductEntityMediaGallery')
-
-
-t_catalog_product_entity_media_gallery_value_to_entity = Table(
-    'catalog_product_entity_media_gallery_value_to_entity', metadata,
-    Column('value_id', ForeignKey('catalog_product_entity_media_gallery.value_id', ondelete='CASCADE'), nullable=False, comment='Value media Entry ID'),
-    Column('entity_id', ForeignKey('catalog_product_entity.entity_id', ondelete='CASCADE'), nullable=False, index=True, comment='Product Entity ID'),
-    Index('CAT_PRD_ENTT_MDA_GLR_VAL_TO_ENTT_VAL_ID_ENTT_ID', 'value_id', 'entity_id', unique=True),
-    comment='Link Media value to Product entity table'
-)
-
-
-t_catalog_product_entity_media_gallery_value_video = Table(
-    'catalog_product_entity_media_gallery_value_video', metadata,
-    Column('value_id', ForeignKey('catalog_product_entity_media_gallery.value_id', ondelete='CASCADE'), nullable=False, comment='Media Entity ID'),
-    Column('store_id', ForeignKey('store.store_id', ondelete='CASCADE'), nullable=False, index=True, server_default=text("0"), comment='Store ID'),
-    Column('provider', String(32), comment='Video provider ID'),
-    Column('url', Text, comment='Video URL'),
-    Column('title', String(255), comment='Title'),
-    Column('description', Text, comment='Page Meta Description'),
-    Column('metadata', Text, comment='Video meta data'),
-    Index('CAT_PRD_ENTT_MDA_GLR_VAL_VIDEO_VAL_ID_STORE_ID', 'value_id', 'store_id', unique=True),
-    comment='Catalog Product Video Table'
-)
+    value = relationship('CatalogProductEntityMediaGallery', primaryjoin='CatalogProductEntityMediaGalleryValue.value_id == CatalogProductEntityMediaGallery.value_id')
+    product = relationship('CatalogProductEntity', primaryjoin=f"CatalogProductEntityMediaGalleryValue.{_prd_entity_col} == CatalogProductEntity.entity_id")
 
 
 class CatalogProductEntityText(Base):
+    """Catalog Product Text Attribute Backend Table"""
     __tablename__ = 'catalog_product_entity_text'
-    __table_args__ = (
-        Index('CATALOG_PRODUCT_ENTITY_TEXT_ENTITY_ID_ATTRIBUTE_ID_STORE_ID', 'entity_id', 'attribute_id', 'store_id', unique=True),
-        {'comment': 'Catalog Product Text Attribute Backend Table'}
-    )
+    __table_args__ = {'comment': 'Catalog Product Text Attribute Backend Table'}
 
     value_id = Column(INTEGER(11), primary_key=True, comment='Value ID')
     attribute_id = Column(ForeignKey('eav_attribute.attribute_id', ondelete='CASCADE'), nullable=False, index=True, server_default=text("0"), comment='Attribute ID')
     store_id = Column(ForeignKey('store.store_id', ondelete='CASCADE'), nullable=False, index=True, server_default=text("0"), comment='Store ID')
-    entity_id = Column(ForeignKey('catalog_product_entity.entity_id', ondelete='CASCADE'), nullable=False, server_default=text("0"), comment='Entity ID')
     value = Column(Text, comment='Value')
-
+    
+    locals()[_prd_entity_col] = Column(Integer, ForeignKey('catalog_product_entity.entity_id', ondelete='CASCADE'), nullable=False, index=True, server_default=text("0"), comment='Row ID' if _prd_entity_col == 'row_id' else 'Entity ID')
     attribute = relationship('EavAttribute')
-    entity = relationship('CatalogProductEntity', back_populates="text")
     store = relationship('Store')
+    product = relationship('CatalogProductEntity', primaryjoin=f"CatalogProductEntityText.{_prd_entity_col} == CatalogProductEntity.entity_id")
 
 
 class CatalogProductEntityVarchar(Base):
+    """Catalog Product Varchar Attribute Backend Table"""
     __tablename__ = 'catalog_product_entity_varchar'
-    __table_args__ = (
-        Index('CATALOG_PRODUCT_ENTITY_VARCHAR_ENTITY_ID_ATTRIBUTE_ID_STORE_ID', 'entity_id', 'attribute_id', 'store_id', unique=True),
-        {'comment': 'Catalog Product Varchar Attribute Backend Table'}
-    )
+    __table_args__ = {'comment': 'Catalog Product Varchar Attribute Backend Table'}
 
     value_id = Column(INTEGER(11), primary_key=True, comment='Value ID')
     attribute_id = Column(ForeignKey('eav_attribute.attribute_id', ondelete='CASCADE'), nullable=False, index=True, server_default=text("0"), comment='Attribute ID')
     store_id = Column(ForeignKey('store.store_id', ondelete='CASCADE'), nullable=False, index=True, server_default=text("0"), comment='Store ID')
-    entity_id = Column(ForeignKey('catalog_product_entity.entity_id', ondelete='CASCADE'), nullable=False, server_default=text("0"), comment='Entity ID')
     value = Column(String(255), comment='Value')
-
+    locals()[_prd_entity_col] = Column(Integer, ForeignKey('catalog_product_entity.entity_id', ondelete='CASCADE'), nullable=False, index=True, server_default=text("0"), comment='Row ID' if _prd_entity_col == 'row_id' else 'Entity ID')
     attribute = relationship('EavAttribute')
-    entity = relationship('CatalogProductEntity', back_populates="varchar")
     store = relationship('Store')
+    product = relationship('CatalogProductEntity', primaryjoin=f"CatalogProductEntityVarchar.{_prd_entity_col} == CatalogProductEntity.entity_id")
+
 
 
 class CatalogProductOptionPrice(Base):
