@@ -1,5 +1,64 @@
 # PyGento
 
+Python module to work with Magento Database directly without using the Magento 2 core
+
+<img src="https://github.com/Genaker/PyGento/blob/main/PyGento.PNG?raw=true" alt="PyGento" width="600"/>
+
+PyGento is built on top of SQLAlchemy, providing a clean, Pythonic interface to Magento's database.
+
+## Django App Usage
+
+PyGento provides a Django application for querying Magento products and data (see `products` app and `test_django.py`).
+
+### Running the Django Server (Development)
+
+Start the Django development server:
+
+```bash
+python manage.py runserver
+```
+
+- By default, the server runs on `http://127.0.0.1:8000`.
+- The `--reload` flag is enabled by default in development mode.
+
+### Accessing the Django App
+
+Visit:
+- [http://127.0.0.1:8000/](http://127.0.0.1:8000/) - Home page with documentation
+- [http://127.0.0.1:8000/products/](http://127.0.0.1:8000/products/) - Product listing (HTML)
+- [http://127.0.0.1:8000/products/?format=json](http://127.0.0.1:8000/products/?format=json) - Product listing (JSON)
+- [http://127.0.0.1:8000/products/?limit=20](http://127.0.0.1:8000/products/?limit=20) - Limit number of products
+- [http://127.0.0.1:8000/health/](http://127.0.0.1:8000/health/) - Health check endpoint
+
+### Testing the Django App
+
+Run the Django app tests:
+
+```bash
+python test_django.py
+```
+
+### Django App Structure
+
+```
+products/              # Django app for Magento products
+├── views.py          # Views for product listing and home page
+├── urls.py           # URL routing
+├── templates/        # HTML templates
+│   └── products/
+│       ├── base.html         # Base template with styling
+│       ├── home.html         # Home page
+│       └── product_list.html # Product listing page
+└── tests.py          # Unit tests
+
+django_app/           # Django project settings
+├── settings.py       # Project settings
+├── urls.py           # Main URL configuration
+└── wsgi.py           # WSGI application
+```
+
+---
+
 ## FastAPI HTTP API Usage
 
 PyGento provides a FastAPI-based HTTP API for product and attribute queries (see `test_fastapi.py`).
@@ -65,7 +124,8 @@ uvicorn test_fastapi:app --host 0.0.0.0 --port 8000 --workers 4
 - Monitor logs and set up error reporting for production stability.
 
 See [FastAPI deployment docs](https://fastapi.tiangolo.com/deployment/) for more details.
-Python module to work with Magento Database directly without using the Magento 2 core
+
+---
 
 <img src="https://github.com/Genaker/PyGento/blob/main/PyGento.PNG?raw=true" alt="PyGento" width="600"/>
 
