@@ -12,7 +12,13 @@ PyGento provides a Django application for querying Magento products and data (se
 
 ### Running the Django Server (Development)
 
-Start the Django development server:
+Start the Django development server using the convenience script:
+
+```bash
+python run_django.py
+```
+
+Or use the standard Django command:
 
 ```bash
 python manage.py runserver

@@ -20,9 +20,17 @@
     </div>
 </div>
 
+{% if error %}
+<div class="info-box" style="border-left-color: #dc3545; background: #f8d7da;">
+    <h3>⚠️ Error</h3>
+    <p>{{ error }}</p>
+    <p style="margin-top: 10px;">Please check your database configuration in the <code>.env</code> file.</p>
+</div>
+{% else %}
 <div class="info-box">
     <p>Showing {{ count }} products from Magento database using PyGento</p>
 </div>
+{% endif %}
 
 {% if products %}
 <table>

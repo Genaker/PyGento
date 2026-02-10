@@ -13,14 +13,33 @@ class ProductListView(View):
     """View to list Magento products using PyGento"""
     
     def get(self, request):
-        # Get query parameters
-        limit = int(request.GET.get('limit', 10))
+        # Get and validate query parameters
+        try:
+            limit = int(request.GET.get('limit', 10))
+            # Ensure limit is within reasonable bounds
+            if limit < 1 or limit > 100:
+                limit = 10
+        except (ValueError, TypeError):
+            limit = 10
+            
         format_type = request.GET.get('format', 'html')  # html or json
         
         # Initialize PyGento database connection
-        db_conn = DatabaseConnection()
-        engine, Session = init_db(db_conn.get_connection_string())
-        session = Session()
+        try:
+            db_conn = DatabaseConnection()
+            engine, Session = init_db(db_conn.get_connection_string())
+            session = Session()
+        except Exception as e:
+            error_msg = f"Database connection failed: {str(e)}"
+            if format_type == 'json':
+                return JsonResponse({'error': error_msg}, status=500)
+            return render(request, 'products/product_list.html', {
+                'error': error_msg,
+                'products': [],
+                'count': 0,
+                'query_time': 0,
+                'limit': limit,
+            })
         
         try:
             start_time = time.time()
@@ -57,6 +76,17 @@ class ProductListView(View):
             }
             return render(request, 'products/product_list.html', context)
             
+        except Exception as e:
+            error_msg = f"Error querying products: {str(e)}"
+            if format_type == 'json':
+                return JsonResponse({'error': error_msg}, status=500)
+            return render(request, 'products/product_list.html', {
+                'error': error_msg,
+                'products': [],
+                'count': 0,
+                'query_time': 0,
+                'limit': limit,
+            })
         finally:
             session.close()
 
