@@ -1,0 +1,62 @@
+{% extends 'products/base.html' %}
+
+{% block title %}Home - PyGento Django App{% endblock %}
+
+{% block content %}
+<div class="info-box">
+    <h2>Welcome to PyGento Django App!</h2>
+    <p>This is a demonstration of how to use PyGento with Django to access Magento database directly.</p>
+</div>
+
+<h2>Features</h2>
+<ul style="margin: 20px 0; padding-left: 40px;">
+    <li><strong>Direct Database Access:</strong> Query Magento database without using Magento core</li>
+    <li><strong>SQLAlchemy Integration:</strong> Leverage powerful ORM capabilities</li>
+    <li><strong>Django Framework:</strong> Build web applications with Django</li>
+    <li><strong>Type Annotations:</strong> Full type hints for better IDE support</li>
+    <li><strong>High Performance:</strong> Fast queries compared to Magento core</li>
+</ul>
+
+<h2>Quick Start</h2>
+<div style="margin: 20px 0;">
+    <p>1. Configure your database connection in <code>.env</code> file:</p>
+    <pre style="background: #f8f9fa; padding: 15px; border-radius: 5px; margin: 10px 0; overflow-x: auto;">
+DB_HOST=localhost
+DB_PORT=3306
+DB_NAME=magento
+DB_USER=magento
+DB_PASSWORD=magento
+DB_CHARSET=utf8mb4
+MAGENTO_EDITION=enterprise
+    </pre>
+    
+    <p>2. Run the Django development server:</p>
+    <pre style="background: #f8f9fa; padding: 15px; border-radius: 5px; margin: 10px 0;">
+python manage.py runserver
+    </pre>
+    
+    <p>3. Visit the products page to see Magento products:</p>
+    <pre style="background: #f8f9fa; padding: 15px; border-radius: 5px; margin: 10px 0;">
+http://127.0.0.1:8000/products/
+    </pre>
+</div>
+
+<h2>API Endpoints</h2>
+<div style="margin: 20px 0;">
+    <ul style="padding-left: 40px;">
+        <li><code>/</code> - Home page</li>
+        <li><code>/products/</code> - List products (HTML)</li>
+        <li><code>/products/?format=json</code> - List products (JSON)</li>
+        <li><code>/products/?limit=20</code> - Limit number of products</li>
+        <li><code>/health/</code> - Health check endpoint</li>
+    </ul>
+</div>
+
+<div style="margin-top: 30px;">
+    <a href="{% url 'products:product_list' %}" class="btn">View Products</a>
+</div>
+
+<div class="info-box" style="margin-top: 30px;">
+    <p><strong>Timestamp:</strong> {{ timestamp }}</p>
+</div>
+{% endblock %}
