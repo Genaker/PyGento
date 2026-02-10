@@ -1,0 +1,85 @@
+{% extends 'products/base.html' %}
+
+{% block title %}Products - PyGento Django App{% endblock %}
+
+{% block content %}
+<h2>Magento Products</h2>
+
+<div class="stats">
+    <div class="stat-card">
+        <div class="value">{{ count }}</div>
+        <div class="label">Products Loaded</div>
+    </div>
+    <div class="stat-card">
+        <div class="value">{{ query_time }}ms</div>
+        <div class="label">Query Time</div>
+    </div>
+    <div class="stat-card">
+        <div class="value">{{ limit }}</div>
+        <div class="label">Limit</div>
+    </div>
+</div>
+
+<div class="info-box">
+    <p>Showing {{ count }} products from Magento database using PyGento</p>
+</div>
+
+{% if products %}
+<table>
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>SKU</th>
+            <th>Created At</th>
+            <th>Updated At</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for product in products %}
+        <tr>
+            <td>{{ product.id }}</td>
+            <td><strong>{{ product.sku }}</strong></td>
+            <td>{{ product.created_at|default:"N/A" }}</td>
+            <td>{{ product.updated_at|default:"N/A" }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<div class="info-box" style="border-left-color: #dc3545;">
+    <p>No products found in the database. Make sure your database connection is configured correctly.</p>
+</div>
+{% endif %}
+
+<div style="margin-top: 30px;">
+    <a href="?limit=5" class="btn">Load 5</a>
+    <a href="?limit=10" class="btn">Load 10</a>
+    <a href="?limit=20" class="btn">Load 20</a>
+    <a href="?limit=50" class="btn">Load 50</a>
+    <a href="?format=json" class="btn">JSON Format</a>
+</div>
+
+<div class="info-box" style="margin-top: 30px;">
+    <h3>Example Usage in Code:</h3>
+    <pre style="background: white; padding: 15px; border-radius: 5px; overflow-x: auto;">
+from models import init_db
+from models.catalog import CatalogProductEntity as Product
+from utils.database import DatabaseConnection
+
+# Initialize database connection
+db_conn = DatabaseConnection()
+engine, Session = init_db(db_conn.get_connection_string())
+session = Session()
+
+# Query products
+products = session.query(Product).limit(10).all()
+
+# Print product SKUs
+for product in products:
+    print(f"SKU: {product.sku}")
+
+# Close session
+session.close()
+    </pre>
+</div>
+{% endblock %}
