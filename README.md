@@ -91,7 +91,8 @@ PyGento is built on top of SQLAlchemy, providing a clean, Pythonic interface to 
    pip install -r requirements.txt
    ```
 
-3. Configure your database connection by creating a `.env` file:
+3. Configure your database connection by copying `.env.example` to `.env`
+   and pointing it at a real Magento 2 database:
    ```ini
    DB_HOST=localhost
    DB_PORT=3306
@@ -99,7 +100,78 @@ PyGento is built on top of SQLAlchemy, providing a clean, Pythonic interface to 
    DB_USER=magento
    DB_PASSWORD=magento
    DB_CHARSET=utf8mb4
+   MAGENTO_EDITION=community
    ```
+   `.env` itself is gitignored -- it used to be committed with real-looking
+   (if only ever locally-used) credentials in it, which is exactly the
+   kind of thing `.gitignore` exists to prevent regardless of whether the
+   specific values were ever actually sensitive.
+
+## Magmi-Style Bulk Import
+
+```bash
+python import_products.py path/to/products.csv --batch-size 500
+```
+
+`import_products.py`: the same shape (and the same fix) as every other
+importer in this benchmark family (GoGento, gogento-rust, laragento) --
+parse a CSV, resolve SKUs, bulk-insert new entities (relying on
+MySQL/InnoDB's consecutive-auto-increment-lock guarantee for a multi-row
+insert), bucket attribute values by EAV backend_type, and batch-upsert
+each of the 5 `catalog_product_entity_*` value tables via SQLAlchemy's
+MySQL-dialect `insert().on_duplicate_key_update()` -- one explicit
+transaction per table, never a per-row ORM model save.
+
+**Benchmark** (`/usr/bin/time -l`, same 1000-row/13-attribute CSV
+gogento-rust's own Go-vs-Rust benchmark uses, same real Magento database
+laragento's and the plain-PDO/Magento-bootstrap PHP scripts in
+gogento-rust's `bench/` run against):
+
+| | Import time | Max RSS |
+|---|---|---|
+| PHP, plain PDO + Magento bootstrap (no ORM) | 2.90s | 35.2 MB |
+| Laravel, Eloquent `upsert()` | ~4.4s | 50.5 MB |
+| **PyGento, SQLAlchemy Core `upsert`** | **~4.5s** | **42.4 MB** |
+| PHP, Magento's own `Model::save()` per row | 120.6s | 66.7 MB |
+
+Properly batched (unlike `Model::save()`), so it avoids that 41x-scale
+penalty almost entirely, and lands within noise of Laravel's Eloquent
+`upsert()` on the identical statement shape against the identical
+database (three back-to-back runs of each: 4.29s/4.55s median, ~6% apart)
+-- checked directly, not assumed: a `general_log` capture of the actual
+SQL confirmed `insert(table).values(chunk).on_duplicate_key_update(...)`
+compiles to one genuine multi-row `INSERT ... ON DUPLICATE KEY UPDATE`
+per chunk, not N separate statements, so there was no batching bug to
+find. An *earlier* version of this number (8.68s) was a measurement
+artifact, not a real result -- it compared runs from separate sessions
+against a shared, actively-used database whose load varies a lot run to
+run; left as a note in gogento-rust's README as a reminder that only
+back-to-back, same-session runs are actually comparable on a shared DB.
+See the top-level `gogento-rust` repo's README for the full
+Go/Rust/PHP/Laravel/Python comparison this benchmark is part of.
+
+## Storefront
+
+```bash
+uvicorn app:app --reload
+```
+
+`app.py`: a small FastAPI app with the same three routes the Go, Rust, and
+Laravel reimplementations in this benchmark family each have --
+`/` (catalog stats), `/category/{id}` (paginated product grid), and
+`/product/{id}` (detail page with breadcrumbs) -- rendered via Jinja2
+templates in `templates/`. Backed by `utils/eav.py`, a small "flatten this
+entity's EAV attributes into a dict" helper with a batch-first API
+(`flatten_products()` fetches N entities in one query per value table,
+not one query per table *per* entity) -- written batch-first deliberately,
+after the sibling laragento project's `CategoryController` was found to
+have exactly that N+1 bug in its per-product `flattenProduct()` loop; see
+"Bugs Found and Fixed" below for what was actually wrong in *this*
+codebase.
+
+This is a separate, real entrypoint from `test_fastapi.py` (an earlier
+ad-hoc JSON-API + demo script despite the filename, not this project's
+storefront).
 
 ## Quick Start
 
@@ -125,11 +197,70 @@ session.close()
 
 ## Testing
 
-Run the test script to verify your setup:
-
 ```bash
-python test_db.py
+pip install -r requirements.txt   # includes pytest and httpx now
+pytest
 ```
+
+17 tests in `tests/`, against the real database, skipping gracefully
+(`pytest.skip`, not a failure) if it isn't reachable -- the same
+convention GoGento's, gogento-rust's, and laragento's own DB-touching
+tests use, since there's no disposable schema here to spin up in CI.
+Coverage: the storefront's three routes (happy path, 404s, a 422 for a
+malformed path param), the import command's create/reimport/failure
+paths, `utils/eav.py`'s batching, and `tests/test_models.py`, which is
+specifically regression coverage for the bugs below -- every one of them
+would have been caught by these tests before they ever reached a real
+Community Edition install.
+
+`test.py`, `test_cli.py`, `test_db.py`, and `test_fastapi.py` at the repo
+root predate this suite and aren't pytest tests despite the name --
+they're ad-hoc scripts you run directly with `python <name>.py` to poke
+at the database or the old JSON API by hand. Left as-is; `tests/` is the
+real, automated suite.
+
+## Bugs Found and Fixed
+
+- **`.env` was committed to git.** Removed from tracking, added a real
+  `.gitignore`, and a committed `.env.example` with the same placeholder
+  values takes its place. The values themselves were only ever local
+  defaults (`magento`/`magento`), but tracking `.env` at all is exactly
+  the habit that leaks real credentials the day someone reuses this
+  pattern with a real password.
+- **Three hardcoded `'row_id'` literals in `models/catalog.py` broke
+  Community Edition entirely.** This file has a real, working
+  `MAGENTO_EDITION` toggle (`_prd_entity_col`/`_cat_entity_col`,
+  resolved per-column via `locals()[...]`) meant to switch every
+  attribute-table's entity column between `entity_id` (CE) and `row_id`
+  (EE) -- but three places short-circuited it: the top-level
+  `catalog_product_entity_media_gallery_value_to_entity` table (both its
+  `Column` and its `Index` hardcoded `'row_id'`), and the `Index`
+  definitions on `CatalogProductEntityGallery` and
+  `CatalogProductEntityMediaGalleryValue`. Importing `models.catalog` at
+  all raised `KeyError: 'row_id'` under `MAGENTO_EDITION=community`,
+  against a real CE database where that column is named `entity_id`.
+- **A copy-paste bug in `CatalogProductEntity.text` and `.intager`.**
+  Both properties branch on `is_enterprise` to pick the right join column
+  for their relationship to `CatalogProductEntityText`/`Int` -- but in
+  both properties, the `else` (Community) branch was copy-pasted from the
+  `if` (Enterprise) branch and still said `row_id` instead of `entity_id`.
+  Every other attribute-table relationship on the same class (`varchar`,
+  `decimal`, `datetime`) has the correct `else` branch; only these two
+  didn't. Surfaced as `AttributeError: ... does not have a mapped column
+  named 'row_id'` the moment SQLAlchemy tried to configure the mapper --
+  not at import time, which is presumably why it went unnoticed.
+
+None of these are found in `models/eav.py`, `models/store.py`, etc.
+directly -- `models/catalog.py` keeps its own self-contained copies of
+`EavAttribute` and `Store` rather than importing them (each of this
+project's 77 model files creates its own independent
+`declarative_base()`, so cross-file `relationship("ClassName")` string
+lookups wouldn't resolve; every file is written to be self-sufficient
+instead). That's an unusual choice worth knowing about if you ever add a
+model that needs to reference a class defined in a different file, but it
+isn't itself a bug -- `test_every_model_module_is_importable` in
+`tests/test_models.py` confirms all 77 files still load cleanly on their
+own.
 
 ## Models
 

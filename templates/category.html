@@ -1,0 +1,41 @@
+{% extends "layout.html" %}
+
+{% block title %}{{ category_name }} -- PyGento{% endblock %}
+
+{% block content %}
+    <nav class="text-sm text-gray-500 mb-4">
+        <a href="/" class="hover:underline">Home</a> / {{ category_name }}
+    </nav>
+    <h1 class="text-2xl font-bold mb-6">{{ category_name }}</h1>
+
+    {% if not products %}
+        <p class="text-gray-500">No products in this category.</p>
+    {% else %}
+        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
+            {% for product in products %}
+                <a href="/product/{{ product.entity_id }}"
+                   class="block bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition">
+                    <div class="font-medium text-gray-900 truncate">{{ product.name }}</div>
+                    <div class="text-indigo-600 mt-2">
+                        {% if product.price is not none %}
+                            ${{ "%.2f"|format(product.price|float) }}
+                        {% else %}
+                            &mdash;
+                        {% endif %}
+                    </div>
+                </a>
+            {% endfor %}
+        </div>
+
+        {% if total_pages > 1 %}
+            <div class="flex items-center gap-2 mt-8 justify-center">
+                {% for n in range(1, total_pages + 1) %}
+                    <a href="/category/{{ category_id }}?page={{ n }}"
+                       class="px-3 py-1 rounded {{ 'bg-indigo-600 text-white' if n == page else 'bg-white border border-gray-200 text-gray-700' }}">
+                        {{ n }}
+                    </a>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endif %}
+{% endblock %}

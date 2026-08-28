@@ -1,0 +1,41 @@
+{% extends "layout.html" %}
+
+{% block title %}{{ name }} -- PyGento{% endblock %}
+
+{% block content %}
+    <nav class="text-sm text-gray-500 mb-4">
+        <a href="/" class="hover:underline">Home</a>
+        {% for crumb in breadcrumbs %}
+            / <a href="/category/{{ crumb.id }}" class="hover:underline">{{ crumb.name }}</a>
+        {% endfor %}
+        / {{ name }}
+    </nav>
+
+    <div class="bg-white border border-gray-200 rounded-lg p-8">
+        <h1 class="text-3xl font-bold mb-2">{{ name }}</h1>
+        <p class="text-sm text-gray-500 mb-4">SKU: {{ sku }}</p>
+
+        <div class="text-2xl text-indigo-600 font-semibold mb-6">
+            {% if price is not none %}
+                ${{ "%.2f"|format(price|float) }}
+            {% else %}
+                Price not set
+            {% endif %}
+        </div>
+
+        {% if short_description %}
+            <p class="text-gray-700 mb-4">{{ short_description }}</p>
+        {% endif %}
+
+        {% if description %}
+            {# Escape first, *then* inject <br> -- doing it the other way
+               around (replace on the raw string, then |safe) would let
+               unescaped HTML in an imported description through as-is. #}
+            <div class="prose max-w-none text-gray-700">{{ description|e|replace('\n', '<br>\n')|safe }}</div>
+        {% endif %}
+
+        {% if weight is not none %}
+            <p class="text-sm text-gray-500 mt-6">Weight: {{ weight }}</p>
+        {% endif %}
+    </div>
+{% endblock %}

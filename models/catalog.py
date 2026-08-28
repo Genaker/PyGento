@@ -12,11 +12,19 @@ from models.base import EntityIdMixin
 Base = declarative_base()
 metadata = Base.metadata
 
+# Community edition's catalog_product_entity_* tables key off 'entity_id';
+# Enterprise's staging/versioning schema renames that same column to
+# 'row_id'. Defined here (rather than only lower in this file, where it
+# used to live) so the module-level Table() below -- which needs it too --
+# doesn't reference a name that doesn't exist yet.
+_cat_entity_col = 'row_id' if os.environ.get('MAGENTO_EDITION', '').lower() == 'enterprise' else 'entity_id'
+_prd_entity_col = 'row_id' if os.environ.get('MAGENTO_EDITION', '').lower() == 'enterprise' else 'entity_id'
+
 catalog_product_entity_media_gallery_value_to_entity = Table(
     'catalog_product_entity_media_gallery_value_to_entity', metadata,
     Column('value_id', ForeignKey('catalog_product_entity_media_gallery.value_id', ondelete='CASCADE'), nullable=False, comment='Value media Entry ID'),
-    Column('row_id', ForeignKey('catalog_product_entity.entity_id', ondelete='CASCADE'), nullable=False, index=True, comment='Product Entity ID'),
-    Index('CAT_PRD_ENTT_MDA_GLR_VAL_TO_ENTT_VAL_ID_ROW_ID', 'value_id', 'row_id', unique=True),
+    Column(_prd_entity_col, ForeignKey('catalog_product_entity.entity_id', ondelete='CASCADE'), nullable=False, index=True, comment='Product Entity ID'),
+    Index('CAT_PRD_ENTT_MDA_GLR_VAL_TO_ENTT_VAL_ID_ROW_ID', 'value_id', _prd_entity_col, unique=True),
     comment='Link Media value to Product entity table'
 )
 
@@ -205,8 +213,8 @@ class CatalogProductEntity(Base, EntityIdMixin):
         else:
             return relationship(
                 "CatalogProductEntityText",
-                primaryjoin="CatalogProductEntityText.row_id == CatalogProductEntity.entity_id",
-                foreign_keys="[CatalogProductEntityText.row_id]",
+                primaryjoin="CatalogProductEntityText.entity_id == CatalogProductEntity.entity_id",
+                foreign_keys="[CatalogProductEntityText.entity_id]",
                 back_populates='product',
                 lazy='dynamic'
             )
@@ -229,8 +237,8 @@ class CatalogProductEntity(Base, EntityIdMixin):
         else:
             return relationship(
                 "CatalogProductEntityInt",
-                primaryjoin="CatalogProductEntityInt.row_id == CatalogProductEntity.entity_id",
-                foreign_keys="[CatalogProductEntityInt.row_id]",
+                primaryjoin="CatalogProductEntityInt.entity_id == CatalogProductEntity.entity_id",
+                foreign_keys="[CatalogProductEntityInt.entity_id]",
                 viewonly=True,
                 lazy='dynamic',
                 back_populates='product'
@@ -1383,9 +1391,6 @@ class CatalogCategoryEntityInt(Base):
     store = relationship('Store')
 
 
-_cat_entity_col = 'row_id' if os.environ.get('MAGENTO_EDITION', '').lower() == 'enterprise' else 'entity_id'
-_prd_entity_col = 'row_id' if os.environ.get('MAGENTO_EDITION', '').lower() == 'enterprise' else 'entity_id'
-
 class CatalogCategoryEntityText(Base):
     __tablename__ = 'catalog_category_entity_text'
     __table_args__ = (
@@ -1475,7 +1480,7 @@ class CatalogProductEntityDecimal(Base):
 class CatalogProductEntityGallery(Base):
     __tablename__ = 'catalog_product_entity_gallery'
     __table_args__ = (
-        Index('CATALOG_PRODUCT_ENTITY_GALLERY_ROW_ID_ATTRIBUTE_ID_STORE_ID', 'row_id', 'attribute_id', 'store_id', unique=True),
+        Index('CATALOG_PRODUCT_ENTITY_GALLERY_ROW_ID_ATTRIBUTE_ID_STORE_ID', _prd_entity_col, 'attribute_id', 'store_id', unique=True),
         {'comment': 'Catalog Product Gallery Attribute Backend Table'}
     )
 
@@ -1511,7 +1516,7 @@ class CatalogProductEntityInt(Base):
 class CatalogProductEntityMediaGalleryValue(Base):
     __tablename__ = 'catalog_product_entity_media_gallery_value'
     __table_args__ = (
-        Index('CAT_PRD_ENTT_MDA_GLR_VAL_ROW_ID_VAL_ID_STORE_ID', 'row_id', 'value_id', 'store_id'),
+        Index('CAT_PRD_ENTT_MDA_GLR_VAL_ROW_ID_VAL_ID_STORE_ID', _prd_entity_col, 'value_id', 'store_id'),
         {'comment': 'Catalog Product Media Gallery Attribute Value Table'}
     )
 
